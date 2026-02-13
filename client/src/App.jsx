@@ -1,34 +1,70 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [boysName, setBoysName] = useState('');
+  const [girlsName, setGirlsName] = useState('');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const calculateLove = async () => {
+    if (!boysName || !girlsName) return alert("Remplis les prénoms !");
+    
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/love', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ boysName, girlsName }),
+      });
+
+      const data = await response.json();
+      setResult(data);
+    } catch (error) {
+      console.error("Erreur API:", error);
+      alert("Le serveur ne répond pas ! Vérifie si le Backend est lancé.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
+    <div className="App">
+      <h1>Love Meter</h1>
+      
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+        <input 
+          type="text" 
+          placeholder="Nom du garçon" 
+          value={boysName}
+          onChange={(e) => setBoysName(e.target.value)} 
+        />
+
+        <span className="heart-separator"> & </span>
+
+        <input 
+          type="text" 
+          placeholder="Nom de la fille" 
+          value={girlsName}
+          onChange={(e) => setGirlsName(e.target.value)}
+        />
+
+        <br /><br />
+
+        <button onClick={calculateLove} disabled={loading}>
+          {loading ? "Calcul..." : "Entrer"}
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+
+      {result && (
+        <div className="result">
+          <h2>Score : {result.score}%</h2>
+          <p>La probabilité entre {result.boys_name} et {result.girls_name} est de {result.score}% !</p>
+        </div>
+      )}
+    </div>
   )
 }
 
